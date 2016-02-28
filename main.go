@@ -1,16 +1,18 @@
 package main
 
 import (
-    "encoding/json"
+    "html/template"
     "net/http"
-    "fmt"
+    "path"
 )
 
 type book struct {
-    Title  string `json:"title"`
-    Author string `json:"author name"`
-    Age    int `json:"age,omitempty"`
+    Title  string
+    Author string
 }
+
+var fp = path.Join("templates", "index.html")
+var tmpl, err = template.ParseFiles(fp)
 
 func main() {
     http.HandleFunc("/", showBooks)
@@ -18,26 +20,14 @@ func main() {
 }
 
 func showBooks(w http.ResponseWriter, r *http.Request) {
-    b := book{"Building Web Apps with Go", "Jeremy Saenz", 5}
-    b2 := book{ "adfad", "J", 0}
-    w.Header().Set("Content-Type", "application/json")
-    
-    enc := json.NewEncoder(w)
-    if err := enc.Encode(b); err != nil {
-        fmt.Println("Error Encoding", err)
-    }
-    
-    if err := enc.Encode(b2); err != nil {
-        fmt.Println("Error Encoding", err)
-    }
-    
+    b := book{"Building Web Apps with Go", "Jeremy Saenz"}
 
-    // js, err := json.Marshal(b)
-    // if err != nil {
-    //     http.Error(w, err.Error(), http.StatusInternalServerError)
-    //     return
-    // }
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
 
-    // w.Header().Set("Content-Type", "application/json")
-    // w.Write(js)
+    if err := tmpl.Execute(w, b); err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+    }
 }
